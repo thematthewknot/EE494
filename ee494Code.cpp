@@ -1,4 +1,20 @@
+/*
+Pin Setup
+LED pin 12, output LOW=ON HIGH=OFF 
+GPS pin 5, input serial 4800
+LogOmatic pin 6, output serial 9600
+Autozero pin 11
+Servo 1 pin 9, output PWM
+Servo 2 pin 10, output PWM
+Temp, pin A4, A5 i2C
+Gyro, pin A0 
+*/
+
+
+
+
 #include <NewSoftSerial.h>
+
 #include <SoftwareSerial.h>
 #include <string.h>
 #include "Wire.h"
