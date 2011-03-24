@@ -7,11 +7,8 @@ Autozero pin 11
 Servo 1 pin 9, output PWM
 Servo 2 pin 10, output PWM
 Temp, pin A4, A5 i2C
-Gyro, pin A0 
+Gyro, pin A0 input
 */
-
-
-
 
 #include <NewSoftSerial.h>
 
@@ -24,8 +21,6 @@ void Temprature();
 void GPS();
 void Gyro();
 void PID();
-void Log(String);
-
 //varibles needed for temprature reading.
 int i,x;
 byte res;
@@ -44,9 +39,10 @@ void loop()
 {
 	temprature();
 	GPS();
+	
 	Gyro();
 	PID();
-	Log();
+	
 	
 }
 
@@ -164,8 +160,4 @@ void Gyro()//Read Gyro data
 }
 void PID()//PID control.
 {
-}
-void Log(String Logme)//print string passed to function to datalogger.
-{
-	Serial.print(logme);
 }
