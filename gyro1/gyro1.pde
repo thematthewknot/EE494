@@ -1,44 +1,85 @@
+#define GYRO_SENSITIVITY 0.00333;
+int loops=0; //configuration stage loops
+int centerpoint = 0; // zero rotation value
+int high = 0; // motionless calibration error
+int low = 1023; // motionless calibration error
 
-int gyroPin = 0;               //Gyro is connected to analog pin 0
-float gyroVoltage = 5;         //Gyro is running at 5V
-float gyroZeroVoltage = 1.86;   //Gyro is zeroed at 2.5V
-float gyroSensitivity = .00333;  //Our example gyro is 7mV/deg/sec
-float rotationThreshold = 18;   //Minimum deg/sec to keep track of - helps with gyro drifting
+int warnled = 2; // warning led pin
+int goled = 3; // systems green pin
+int sensor = 0; // analog gyro port
+int variation = 0; // expected gyro jitter +- value
+int change = 0; // ATD conversion change
+float position = 0.0; // current cardinal position
+unsigned long timetook = 0; //sample time taken
+unsigned long lasttook = 0; //last sample time
 
-float currentAngle = 0;          //Keep track of our current angle
-
-void setup() {
-  analogReference(1.86);
-  Serial.begin (9600);
+void setup(){
+  analogReference(1.23);
+  pinMode(warnled,OUTPUT);
+  pinMode(goled,OUTPUT);
+  Serial.begin(9600);
 }
 
-void loop() {
-  //This line converts the 0-1023 signal to 0-5V
-  float gyroRate = (analogRead(gyroPin) * gyroVoltage) / 1023;
+void loop(){
+  lasttook = timetook;
+  int rate = analogRead(0);
+  timetook = millis();
   
-  //This line finds the voltage offset from sitting still
-  gyroRate -= gyroZeroVoltage;
-
-  //This line divides the voltage we found by the gyro's sensitivity
-  gyroRate /= gyroSensitivity;
-
-  //Ignore the gyro if our angular velocity does not meet our threshold
-  if (gyroRate >= rotationThreshold || gyroRate <= -rotationThreshold) {
-    //This line divides the value by 100 since we are running in a 10ms loop (1000ms/10ms)
-    gyroRate /= 100;
-    currentAngle += gyroRate;
+  /* lets quickly run 1000 samples of the gryo
+  and find out how much jitter we are expecting
+  throw up an error if its more than 5 */
+  while(loops < 1000){
+    digitalWrite(warnled,HIGH);
+    int sample = analogRead(sensor);
+    
+    if(sample > high){
+      high = sample;
+    }else if(sample < low){
+      low = sample;
+    }
+    loops++;
+    delay(1);
+  }
+  if(loops==1000){
+    digitalWrite(warnled,LOW);
+    centerpoint = (high-low)+low;  
+    variation = high-low;
+    if(variation > 5){
+      digitalWrite(warnled,HIGH);
+    }else{
+      digitalWrite(goled,HIGH);
+    }
   }
 
-  //Keep our angle between 0-359 degrees
-  if (currentAngle < 0)
-    currentAngle += 360;
-  else if (currentAngle > 359)
-    currentAngle -= 360;
 
-  //DEBUG
-  Serial.println(gyroRate);
-  //int test=analogRead(0)-240;
-  //int test2= test/0.00333;
-//Serial.println(test);
+  // simple statement to keep a little of the natural jitter out
+  if(abs(centerpoint-rate) > variation){
+    change = centerpoint-rate;
+    
+    /* qucik math */
+    float volts = float(change)*0.004647656;
+    float rateofchange = volts/GYRO_SENSITIVITY;
+    float time = (float(timetook)-float(lasttook))/1000.0;
+    float degchange = rateofchange*time;
+    
+    position = position+degchange;
+    position = makecardinal(position);
+  }
+  
+  Serial.println(position);
+  change=0;
+  
   delay(10);
-} 
+}
+
+
+//simple function to make the poisition make sense
+float makecardinal(float position){
+  if(position > 360.00){
+      position = position-360.00;
+    }else if(position < 0){
+      position = 360+position;
+    }
+    return position;
+}
+ 
