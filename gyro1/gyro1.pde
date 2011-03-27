@@ -1,4 +1,6 @@
-#define GYRO_SENSITIVITY 0.00333;
+//#define GYRO_SENSITIVITY 0.00121;
+//#define GYRO_SENSITIVITY 0.6938;
+
 int loops=0; //configuration stage loops
 int centerpoint = 0; // zero rotation value
 int high = 0; // motionless calibration error
@@ -14,7 +16,7 @@ unsigned long timetook = 0; //sample time taken
 unsigned long lasttook = 0; //last sample time
 
 void setup(){
-  analogReference(1.23);
+  analogReference(DEFAULT);
   pinMode(warnled,OUTPUT);
   pinMode(goled,OUTPUT);
   Serial.begin(9600);
@@ -38,8 +40,11 @@ void loop(){
       low = sample;
     }
     loops++;
-    delay(1);
+    delay(1);  
+
   }
+  
+  
   if(loops==1000){
     digitalWrite(warnled,LOW);
     centerpoint = (high-low)+low;  
@@ -54,11 +59,19 @@ void loop(){
 
   // simple statement to keep a little of the natural jitter out
   if(abs(centerpoint-rate) > variation){
+   //  float rateofchange;
     change = centerpoint-rate;
-    
+    float GYRO_SENSITIVITY;
     /* qucik math */
-    float volts = float(change)*0.004647656;
-    float rateofchange = volts/GYRO_SENSITIVITY;
+    if(change >= 0)
+      GYRO_SENSITIVITY = 0.6989;//0.69373; //CCW spin
+    if(change < 0)
+      GYRO_SENSITIVITY = 0.6757197; //0.67703; //CW spin
+    
+    float volts = float(change);//*0.001201172;
+     float rateofchange = volts/GYRO_SENSITIVITY;    
+    
+    
     float time = (float(timetook)-float(lasttook))/1000.0;
     float degchange = rateofchange*time;
     
