@@ -8,10 +8,10 @@ Servo 1 pin 9, output PWM
 Servo 2 pin 10, output PWM
 Temp, pin A4, A5 i2C
 Gyro, pin A0 input
+Example of how to write to datalogger: mySerial.println(val*0.0625, BIN);
 */
 
 #include <NewSoftSerial.h>
-
 #include <SoftwareSerial.h>
 #include <string.h>
 #include "Wire.h"
@@ -20,7 +20,14 @@ Gyro, pin A0 input
 void Temprature();
 void GPS();
 void Gyro();
-void PID();
+
+
+//datalogger
+NewSoftSerial mySerial(rxPin, txPin);
+#define rxPin 4 
+#define txPin 6 
+//datalogger
+
 //varibles needed for temprature reading.
 int i,x;
 byte res;
@@ -29,21 +36,67 @@ byte lsb;
 int val;
 //end of varibles needed for temprature reading.
 
+//Gyro veribles
+int loops=0; //configuration stage loops
+int centerpoint = 0; // zero rotation value
+int high = 0; // motionless calibration error
+int low = 1023; // motionless calibration error
+int sensor = 0; // analog gyro port
+int variation = 0; // expected gyro jitter +- value
+int change = 0; // ATD conversion change
+float position = 0.0; // current cardinal position
+unsigned long timetook = 0; //sample time taken
+unsigned long lasttook = 0; //last sample time
+//gyro
+
+
+//gps
+// int ledPin = 13;                  // LED test pin
+ int GrxPin = 0;                    // RX PIN 
+ int GtxPin = 1;                    // TX TX
+ int byteGPS=-1;
+ char linea[300] = "";
+ char comandoGPR[7] = "$GPRMC";
+ int cont=0;
+ int bien=0;
+ int conta=0;
+ int indices[13];
+//gps
+
 void setup() 
-{  
+{    //gyro
+	analogReference(DEFAULT);
+	pinMode(warnled,OUTPUT);
+	pinMode(goled,OUTPUT);
 	Serial.begin(9600);
 	Wire.begin(); i = 0; 
+	
+	//gps
+	  //pinMode(ledPin, OUTPUT);       // Initialize LED pin
+	pinMode(GrxPin, INPUT);
+   pinMode(GtxPin, OUTPUT);
+   Serial.begin(4800);
+   for (int i=0;i<300;i++)
+   {       // Initialize a buffer for received data
+     linea[i]=' ';
+   }
 }
 
 void loop()
 {
+	
+	for(int gyro_timer=0; gyro_timer < 300; gyro_timer++)//5min gyro contorl
+	{
+	Gyro();
+	delay(1000);
+	}
+	
+	for(int other_timer=0; other_timer < 120; other_timer++)//2min gps/temp reading
+	{
 	temprature();
 	GPS();
-	
-	Gyro();
-	PID();
-	
-	
+	delay(1000);
+	}
 }
 
 void temprature()//Read temp. data.
@@ -56,7 +109,7 @@ void temprature()//Read temp. data.
 		val = ((msb) << 4);  // MSB
 		val |= (lsb >> 4);   // LSB
 		Serial.print(val*0.0625);/* convert to Deg C(>0!)*/
-		delay(1000); 
+		//delay(1000); 
 	}
 }
 
@@ -64,54 +117,45 @@ void temprature()//Read temp. data.
 void GPS()//Read GPS data.
 {
 
- int ledPin = 13;                  // LED test pin
- int rxPin = 0;                    // RX PIN 
- int txPin = 1;                    // TX TX
- int byteGPS=-1;
- char linea[300] = "";
- char comandoGPR[7] = "$GPRMC";
- int cont=0;
- int bien=0;
- int conta=0;
- int indices[13];
- void setup() {
-   pinMode(ledPin, OUTPUT);       // Initialize LED pin
-   pinMode(rxPin, INPUT);
-   pinMode(txPin, OUTPUT);
-   Serial.begin(4800);
-   for (int i=0;i<300;i++){       // Initialize a buffer for received data
-     linea[i]=' ';
-   }   
- }
- void loop() {
-   digitalWrite(ledPin, HIGH);
+   //digitalWrite(ledPin, HIGH);
    byteGPS=Serial.read();         // Read a byte of the serial port
    if (byteGPS == -1) {           // See if the port is empty yet
      delay(100); 
-   } else {
+   }
+   else 
+   {
      linea[conta]=byteGPS;        // If there is serial port data, it is put in the buffer
      conta++;                      
      Serial.print(byteGPS, BYTE); 
-     if (byteGPS==13){            // If the received byte is = to 13, end of transmission
-       digitalWrite(ledPin, LOW); 
-       cont=0;
-       bien=0;
-       for (int i=1;i<7;i++){     // Verifies if the received command starts with $GPR
-         if (linea[i]==comandoGPR[i-1]){
+     if (byteGPS==13)            // If the received byte is = to 13, end of transmission
+     {
+		//digitalWrite(ledPin, LOW); 
+		cont=0;
+		bien=0;
+		for (int i=1;i<7;i++)     // Verifies if the received command starts with $GPR
+        { 
+			if (linea[i]==comandoGPR[i-1])
+			{
            bien++;
-         }
-       }
-       if(bien==6){               // If yes, continue and process the data
-         for (int i=0;i<300;i++){
-           if (linea[i]==','){    // check for the position of the  "," separator
+			}
+		}
+       
+		if(bien==6) // If yes, continue and process the data
+		{              
+         for (int i=0;i<300;i++)
+         {
+           if (linea[i]==',') // check for the position of the  "," separator
+           {   
              indices[cont]=i;
              cont++;
            }
-           if (linea[i]=='*'){    // ... and the "*"
+           if (linea[i]=='*')    // ... and the "*"
+           {  
              indices[12]=i;
              cont++;
            }
          }
+         
          Serial.println("");      // ... and write to the serial port
          Serial.println("");
          Serial.println("---------------");
@@ -131,7 +175,8 @@ void GPS()//Read GPS data.
              case 11 :Serial.print("Mode: ");break;
              case 12 :Serial.print("Checksum: ");break;
            }
-           for (int j=indices[i];j<(indices[i+1]-1);j++){
+           for (int j=indices[i];j<(indices[i+1]-1);j++)
+           {
              Serial.print(linea[j+1]); 
            }
            Serial.println("");
@@ -139,56 +184,35 @@ void GPS()//Read GPS data.
          Serial.println("---------------");
        }
        conta=0;                    // Reset the buffer
-       for (int i=0;i<300;i++){    //  
+       for (int i=0;i<300;i++)
+       {    
          linea[i]=' ';             
        }                 
      }
    }
  }
 
-}
+
 
 void Gyro()//Read Gyro data
 {
-/*//#define GYRO_SENSITIVITY 0.00121;
-//#define GYRO_SENSITIVITY 0.6938;
 
-int loops=0; //configuration stage loops
-int centerpoint = 0; // zero rotation value
-int high = 0; // motionless calibration error
-int low = 1023; // motionless calibration error
-
-int warnled = 2; // warning led pin
-int goled = 3; // systems green pin
-int sensor = 0; // analog gyro port
-int variation = 0; // expected gyro jitter +- value
-int change = 0; // ATD conversion change
-float position = 0.0; // current cardinal position
-unsigned long timetook = 0; //sample time taken
-unsigned long lasttook = 0; //last sample time
-
-void setup(){
-  analogReference(DEFAULT);
-  pinMode(warnled,OUTPUT);
-  pinMode(goled,OUTPUT);
-  Serial.begin(9600);
-}
-
-void loop(){
   lasttook = timetook;
   int rate = analogRead(0);
   timetook = millis();
   
-  /* lets quickly run 1000 samples of the gryo
+  /*  run 1000 samples of the gryo
   and find out how much jitter we are expecting
-  throw up an error if its more than 5 *//*
-  while(loops < 1000){
-    digitalWrite(warnled,HIGH);
+  throw up an error if its more than 5 */
+  while(loops < 1000)
+  {
     int sample = analogRead(sensor);
-    
-    if(sample > high){
+    if(sample > high)
+    {
       high = sample;
-    }else if(sample < low){
+    }
+    else if(sample < low)
+    {
       low = sample;
     }
     loops++;
@@ -196,25 +220,20 @@ void loop(){
 
   }
   
-  
-  if(loops==1000){
-    digitalWrite(warnled,LOW);
+  if(loops==1000)
+  {
     centerpoint = (high-low)+low;  
-    variation = high-low;
-    if(variation > 5){
-      digitalWrite(warnled,HIGH);
-    }else{
-      digitalWrite(goled,HIGH);
-    }
+    variation = high-low; 
   }
 
 
   // simple statement to keep a little of the natural jitter out
-  if(abs(centerpoint-rate) > variation){
-   //  float rateofchange;
+  if(abs(centerpoint-rate) > variation)
+  {
+    //float rateofchange;
     change = centerpoint-rate;
     float GYRO_SENSITIVITY;
-    /* qucik math *//*
+    /* qucik math */
     if(change >= 0)
       GYRO_SENSITIVITY = 0.6989;//0.69373; //CCW spin
     if(change < 0)
@@ -232,25 +251,20 @@ void loop(){
   }
   
   Serial.println(position);
-  change=0;
-  
-  delay(10);
-}
-
+  change=0;  
+ // delay(10);
 
 //simple function to make the poisition make sense
-float makecardinal(float position){
-  if(position > 360.00){
-      position = position-360.00;
-    }else if(position < 0){
-      position = 360+position;
-    }
-    return position;
-}
- 
-*/
-
-}
-void PID()//PID control.
-{
+	float makecardinal(float position)
+	{
+		if(position > 360.00)
+		{
+			position = position-360.00;
+		}
+		else if(position < 0)
+		{
+			position = 360+position;
+		}
+		return position;	
+	}
 }
