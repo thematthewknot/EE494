@@ -9,6 +9,7 @@ Servo 2 pin 10, output PWM
 Temp, pin A4, A5 i2C
 Gyro, pin A0 input
 Example of how to write to datalogger: mySerial.println(val*0.0625, BIN);
+Output data format:Time,control/notcontroll, Gyro pos, gyro rate, servo output, temp, gps(12 fields) 
 */
 
 #include <NewSoftSerial.h>
@@ -118,16 +119,20 @@ void loop()
 	
 	for(int gyro_timer=0; gyro_timer < 300; gyro_timer++)//5min gyro contorl
 	{
-	Gyro();
-	PID();
-	delay(1000);
+		
+		//insert print time function
+		Gyro();
+		PID();
+		delay(1000);
 	}
 	
 	for(int other_timer=0; other_timer < 120; other_timer++)//2min gps/temp reading
 	{
-	temprature();
-	GPS();
-	delay(1000);
+		//insert print time function
+		Gyro();
+		temprature();
+		GPS();
+		delay(1000);
 	}
 }
 
@@ -284,6 +289,14 @@ void Gyro()//Read Gyro data
   
   Serial.println(position);
   change=0;  
+  
+  //****************insert print function here 
+  //print possition
+  //print rateofchange
+  
+  
+  
+  
  // delay(10);
 
 //simple function to make the poisition make sense
@@ -301,8 +314,7 @@ void Gyro()//Read Gyro data
 	}
 }
 	
-	
-	 
+
 	
 void PID()//PID control
 {
@@ -328,37 +340,10 @@ void PID()//PID control
 	myservo2.write(angle);
 	Serial.print("  ");
     Serial.println(angle);
+    
+    //*****************************insert print angle
+    
+    
 	//delay(10);
 }
 	 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
