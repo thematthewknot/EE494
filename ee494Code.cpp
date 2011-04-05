@@ -16,10 +16,14 @@ Example of how to write to datalogger: mySerial.println(val*0.0625, BIN);
 #include <string.h>
 #include "Wire.h"
 #include <ctype.h>
+#include <Servo.h>
+#include <PID_Beta6.h>
+
 
 void Temprature();
 void GPS();
 void Gyro();
+void PID();
 
 
 //datalogger
@@ -63,23 +67,50 @@ unsigned long lasttook = 0; //last sample time
  int indices[13];
 //gps
 
+//pid
+
+double Setpoint, Input, Output,angle;
+Servo myservo1, myservo2; 
+PID myPID(&Input, &Output, &Setpoint,2,5,1);
+//pid
+
 void setup() 
-{    //gyro
+{  
+	//gyro
 	analogReference(DEFAULT);
 	pinMode(warnled,OUTPUT);
 	pinMode(goled,OUTPUT);
 	Serial.begin(9600);
 	Wire.begin(); i = 0; 
+	//gyro
 	
 	//gps
-	  //pinMode(ledPin, OUTPUT);       // Initialize LED pin
+	//pinMode(ledPin, OUTPUT);       // Initialize LED pin
 	pinMode(GrxPin, INPUT);
-   pinMode(GtxPin, OUTPUT);
-   Serial.begin(4800);
-   for (int i=0;i<300;i++)
-   {       // Initialize a buffer for received data
-     linea[i]=' ';
-   }
+	pinMode(GtxPin, OUTPUT);
+	Serial.begin(4800);
+	for (int i=0;i<300;i++)
+	{       // Initialize a buffer for received data
+		linea[i]=' ';
+	}
+	//gps
+	
+	//PID 
+	myservo1.attach(9);
+	myservo2.attach(10);
+	//  angle = 60;
+	//initialize the variables we're linked to
+	Input = analogRead(0);
+	Setpoint = 240;
+	Serial.begin(9600);
+	//turn the PID on
+	myPID.SetMode(AUTO);
+	myPID.SetOutputLimits(0,120);
+	myservo1.write(60);
+	myservo2.write(60);
+	//PID
+   
+   
 }
 
 void loop()
@@ -88,6 +119,7 @@ void loop()
 	for(int gyro_timer=0; gyro_timer < 300; gyro_timer++)//5min gyro contorl
 	{
 	Gyro();
+	PID();
 	delay(1000);
 	}
 	
@@ -268,3 +300,42 @@ void Gyro()//Read Gyro data
 		return position;	
 	}
 }
+	
+	
+	 
+	
+void PID()//PID control
+{
+}
+	 
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
