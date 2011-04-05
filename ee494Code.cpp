@@ -10,6 +10,12 @@ Temp, pin A4, A5 i2C
 Gyro, pin A0 input
 Example of how to write to datalogger: mySerial.println(val*0.0625, BIN);
 Output data format:Time,control/notcontroll, Gyro pos, gyro rate, servo output, temp, gps(12 fields) 
+* 
+* 
+* for timestamp use http://www.arduino.cc/en/Reference/Millis
+* 
+* 
+* 
 */
 
 #include <NewSoftSerial.h>
