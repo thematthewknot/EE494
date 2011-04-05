@@ -306,6 +306,29 @@ void Gyro()//Read Gyro data
 	
 void PID()//PID control
 {
+	Input = analogRead(0);
+	myPID.Compute();
+	//analogWrite(3,Output);
+	Serial.print(analogRead(0));
+	Serial.print("  ");
+    Serial.print(Output);
+  
+	if(Input>=Setpoint)
+	{
+		Serial.print("more then");
+		angle = 60 - Output;
+	}
+	if(Input < Setpoint)
+	{
+	Serial.print("less then");
+    angle = Output + 60 ;
+	}
+    
+    myservo1.write(angle);
+	myservo2.write(angle);
+	Serial.print("  ");
+    Serial.println(angle);
+	//delay(10);
 }
 	 
 	
