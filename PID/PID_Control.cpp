@@ -40,7 +40,7 @@ void loop()
  if(Input <= Setpoint - 2 || Input >= Setpoint + 2) //dead zone
  {
 	 Serial.print("Dead zone");
-	 angle = 60
+	// angle = 60
  } 
  if(Input > Setpoint + 2) 
  {

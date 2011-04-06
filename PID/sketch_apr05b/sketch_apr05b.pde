@@ -26,12 +26,12 @@ Output data format:Time,control/notcontroll, Gyro pos, gyro rate, servo output, 
 #include <Servo.h>
 #include <PID_Beta6.h>
 
-/*
+
 void Temprature();
 void GPS();
 void Gyro();
 void PIDCONTROL();
-*/
+
 
 //datalogger
 #define rxPin 4 
@@ -47,9 +47,6 @@ byte msb;
 byte lsb;
 int val;
 //end of varibles needed for temprature reading.
-
-
-
 
 //Gyro veribles
 int loops=0; //configuration stage loops
@@ -84,9 +81,6 @@ double Setpoint, Input, Output,angle;
 Servo myservo1, myservo2; 
 PID myPID(&Input, &Output, &Setpoint,2,5,1);
 //pid
-
-unsigned long time;
-
 
 void setup() 
 {  
@@ -125,45 +119,28 @@ void setup()
 	//PID
    //datalogger
    pinMode(txPin, OUTPUT);
-   	mySerial.begin(19200);     
-   	//delay(1000);
-   	mySerial.print("time,gyro pos., gyro rate, pidout,temp,gps(12x)");
-   	//delay(1000);
+   	mySerial.begin(9600);     
    	
-   	
+   
 }
 
 void loop()
 {
 	
 	for(int gyro_timer=0; gyro_timer < 3000; gyro_timer++)//5min gyro contorl
-	{  
-		int loopnum=1;
-		time=millis();
-		mySerial.print(time, DEC );
+	{
+		mySerial.println(millis(), BIN);
 		//insert print time function
-	
-		//for(int pidloop=0; pidloop<10;pidloop++)
-      //  { 
-       //     if(pidloop==9)
-      //      {
-     //       loopnum = 1;
-	//		}
-				Gyro(loopnum);
-			PIDCONTROL(loopnum);
-			delay(100);
-  
-        }
-       
-			
+		Gyro();
+		PIDCONTROL();
+		delay(100);
+	}		
 	
 	for(int other_timer=0; other_timer < 120; other_timer++)//2min gps/temp reading
 	{
 		//insert print time function
-             time=millis();
-		mySerial.print(time, DEC);
-		int loopnum;
-		Gyro(loopnum);
+                mySerial.println(millis(), BIN);
+		Gyro();
 		temprature();
 		GPS();
 		delay(1000);
@@ -268,7 +245,7 @@ void GPS()//Read GPS data.
 
 
 
-int Gyro(int loopnum)//Read Gyro data
+void Gyro()//Read Gyro data
 {
 
   lasttook = timetook;
@@ -322,17 +299,12 @@ int Gyro(int loopnum)//Read Gyro data
     
     position = position+degchange;
     position = makecardinal(position);
-   // if(loopnum==1)
-   // {
-		mySerial.print(",");
-		mySerial.print(rateofchange, BIN);
-		mySerial.print(",");
-		mySerial.print(position, BIN); 
-	//}
-  }
+ mySerial.println(rateofchange, BIN);
+  mySerial.println(position, BIN); 
+}
   
-	Serial.println(position);
-	change=0;  
+  Serial.println(position);
+  change=0;  
 }
   //****************insert print function here 
   //print possition
@@ -360,7 +332,7 @@ int Gyro(int loopnum)//Read Gyro data
 	
 
 	
-int PIDCONTROL(int loopnum)//PID control
+void PIDCONTROL()//PID control
 {
 	Input = analogRead(0);
 	myPID.Compute();
@@ -384,15 +356,11 @@ int PIDCONTROL(int loopnum)//PID control
 	myservo2.write(angle);
 	Serial.print("  ");
     Serial.println(angle);
-     
- if(loopnum==1)
- {
-   mySerial.print(",");
     mySerial.println(angle, BIN);
- }
     //*****************************insert print angle
     
     
 	//delay(10);
 }
 	 
+
