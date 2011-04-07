@@ -69,8 +69,8 @@ unsigned long lasttook = 0; //last sample time
 
 //gps
 // int ledPin = 13;                  // LED test pin
- int GrxPin = 0;                    // RX PIN 
- int GtxPin = 1;                    // TX TX
+ int GrxPin = 5;                    // RX PIN 
+ int GtxPin = 3;                    // TX TX
  int byteGPS=-1;
  char linea[300] = "";
  char comandoGPR[7] = "$GPRMC";
@@ -78,6 +78,7 @@ unsigned long lasttook = 0; //last sample time
  int bien=0;
  int conta=0;
  int indices[13];
+// NewSoftSerial gpsSerial(GrxPin, GtxPin);
 //gps
 
 //pid
@@ -139,33 +140,6 @@ void setup()
 void loop()
 {
 	
-	for(int other_timer=0; other_timer < 120; other_timer++)//2min gps/temp reading
-	{   
-		mySerial.print("0");//signify spin control not active
-         mySerial.print(",");
-
-		//insert print time function
-             time=millis();
-		mySerial.print(time, DEC);
-			mySerial.print(",");
-		mySerial.print("0");//break for servo pos.
-		mySerial.print(",");
-		   mySerial.print(analogRead(0), DEC); 
-		   
-		   
-		   
-		Gyro();
-		
-		mySerial.print(",");
-	    	mySerial.print(printposition, BIN);
-            mySerial.print(",");
-		    mySerial.print(printrateofchange,BIN);
-		
-		temprature();
-		GPS();
-		delay(1000);
-	}
-	
 	
 	for(int gyro_timer=0; gyro_timer < 3000; gyro_timer++)//5min gyro contorl
 	{  
@@ -193,7 +167,34 @@ void loop()
             mySerial.print(",");
 		    mySerial.println(printrateofchange,BIN);
      
-	}		
+	}	
+	for(int other_timer=0; other_timer < 120; other_timer++)//2min gps/temp reading
+	{   
+		mySerial.print("0");//signify spin control not active
+         mySerial.print(",");
+
+		//insert print time function
+             time=millis();
+		mySerial.print(time, DEC);
+			mySerial.print(",");
+		mySerial.print("0");//break for servo pos.
+		mySerial.print(",");
+		   mySerial.print(analogRead(0), DEC); 
+		   
+		   
+		   
+		Gyro();
+		
+		mySerial.print(",");
+	    	mySerial.print(printposition, BIN);
+            mySerial.print(",");
+		    mySerial.print(printrateofchange,BIN);
+		
+		temprature();
+		GPS();
+		delay(1000);
+	}
+		
 	
 }
 
@@ -238,6 +239,7 @@ void GPS()//Read GPS data.
 			if (linea[i]==comandoGPR[i-1])
 			{
            bien++;
+         
 			}
 		}
        
@@ -264,7 +266,7 @@ void GPS()//Read GPS data.
            switch(i){
              case 0 :Serial.print("Time in UTC (HhMmSs): ");break;
            
-             case 1 :mySerial.print("Status (A=OK,V=KO): ");break;
+             case 1 :Serial.print("Status (A=OK,V=KO): ");break;
              case 2 :Serial.print("Latitude: ");break;
              case 3 :Serial.print("Direction (N/S): ");break;
              case 4 :Serial.print("Longitude: ");break;
@@ -279,7 +281,8 @@ void GPS()//Read GPS data.
            }
            for (int j=indices[i];j<(indices[i+1]-1);j++)
            {
-             Serial.print(linea[j+1]); 
+             mySerial.print(linea[j+1], BIN); 
+             
            }
            Serial.println("");
          }
