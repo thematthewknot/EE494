@@ -62,6 +62,8 @@ int change = 0; // ATD conversion change
 float position = 0.0; // current cardinal position
 unsigned long timetook = 0; //sample time taken
 unsigned long lasttook = 0; //last sample time
+ float printrateofchange, printposition;
+ 
 //gyro
 
 
@@ -134,28 +136,36 @@ void setup()
 }
 
 void loop()
-{
-	
+{/*
+time=millis();
+mySerial.print(time, DEC );
+Gyro();
+delay(500);*/
+	   // Gyro();
 	for(int gyro_timer=0; gyro_timer < 3000; gyro_timer++)//5min gyro contorl
 	{  
-		int loopnum=1;
+		int loopnum=0;
 		time=millis();
 		mySerial.print(time, DEC );
 		//insert print time function
-	
-		//for(int pidloop=0; pidloop<10;pidloop++)
-      //  { 
-       //     if(pidloop==9)
-      //      {
-     //       loopnum = 1;
-	//		}
-				Gyro(loopnum);
+	    Gyro();
+		for(int pidloop=0; pidloop<10;pidloop++)
+        { 
+           if(pidloop==9)
+            {
+            loopnum = 1;
+			}
+				
 			PIDCONTROL(loopnum);
 			delay(100);
   
         }
-       
-			
+        	mySerial.print(",");
+		mySerial.print(printposition, BIN);
+         mySerial.print(",");
+		mySerial.println(printrateofchange,BIN);
+      // Gyro();
+	}		
 	
 	for(int other_timer=0; other_timer < 120; other_timer++)//2min gps/temp reading
 	{
@@ -163,11 +173,12 @@ void loop()
              time=millis();
 		mySerial.print(time, DEC);
 		int loopnum;
-		Gyro(loopnum);
+		Gyro();
 		temprature();
 		GPS();
 		delay(1000);
 	}
+	
 }
 
 void temprature()//Read temp. data.
@@ -183,13 +194,13 @@ void temprature()//Read temp. data.
 		mySerial.println(val*0.0625, BIN);
                 //delay(1000); 
 	}
+	
 }
 
 
 void GPS()//Read GPS data.
 {
 
-   //digitalWrite(ledPin, HIGH);
    byteGPS=Serial.read();         // Read a byte of the serial port
    if (byteGPS == -1) {           // See if the port is empty yet
      delay(100); 
@@ -268,7 +279,7 @@ void GPS()//Read GPS data.
 
 
 
-int Gyro(int loopnum)//Read Gyro data
+void Gyro()//Read Gyro data
 {
 
   lasttook = timetook;
@@ -319,18 +330,21 @@ int Gyro(int loopnum)//Read Gyro data
     
     float time = (float(timetook)-float(lasttook))/1000.0;
     float degchange = rateofchange*time;
-    
+    printrateofchange = rateofchange;
+   
+   
     position = position+degchange;
     position = makecardinal(position);
-   // if(loopnum==1)
-   // {
-		mySerial.print(",");
-		mySerial.print(rateofchange, BIN);
-		mySerial.print(",");
-		mySerial.print(position, BIN); 
-	//}
+    printposition = position;
+  //  if(loopnum==1)
+//
+	 
+		// mySerial.print(",");
+	//	mySerial.println(printrateofchange,BIN);
+//	}
   }
-  
+		
+   
 	Serial.println(position);
 	change=0;  
 }
@@ -383,12 +397,15 @@ int PIDCONTROL(int loopnum)//PID control
     myservo1.write(angle);
 	myservo2.write(angle);
 	Serial.print("  ");
-    Serial.println(angle);
+    Serial.print(angle);
      
  if(loopnum==1)
  {
    mySerial.print(",");
-    mySerial.println(angle, BIN);
+    mySerial.print(angle, BIN);
+   mySerial.print(",");
+    mySerial.print(analogRead(0), DEC);
+    
  }
     //*****************************insert print angle
     
