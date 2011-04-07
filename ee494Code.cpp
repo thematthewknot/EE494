@@ -127,23 +127,51 @@ void setup()
 	//PID
    //datalogger
    pinMode(txPin, OUTPUT);
+   delay(1000);
    	mySerial.begin(19200);     
-   	//delay(1000);
-   	mySerial.print("time,gyro pos., gyro rate, pidout,temp,gps(12x)");
+   	delay(10);
+   	mySerial.print("Control on(1)/off(0),time,Servo pos., analog gyro in, gyro pos. gyro rateofchange ");
    	//delay(1000);
    	
    	
 }
 
 void loop()
-{/*
-time=millis();
-mySerial.print(time, DEC );
-Gyro();
-delay(500);*/
-	   // Gyro();
+{
+	
+	for(int other_timer=0; other_timer < 120; other_timer++)//2min gps/temp reading
+	{   
+		mySerial.print("0");//signify spin control not active
+         mySerial.print(",");
+
+		//insert print time function
+             time=millis();
+		mySerial.print(time, DEC);
+			mySerial.print(",");
+		mySerial.print("0");//break for servo pos.
+		mySerial.print(",");
+		   mySerial.print(analogRead(0), DEC); 
+		   
+		   
+		   
+		Gyro();
+		
+		mySerial.print(",");
+	    	mySerial.print(printposition, BIN);
+            mySerial.print(",");
+		    mySerial.print(printrateofchange,BIN);
+		
+		temprature();
+		GPS();
+		delay(1000);
+	}
+	
+	
 	for(int gyro_timer=0; gyro_timer < 3000; gyro_timer++)//5min gyro contorl
 	{  
+		mySerial.print("1");//signify spin control active
+		         mySerial.print(",");
+
 		int loopnum=0;
 		time=millis();
 		mySerial.print(time, DEC );
@@ -161,23 +189,11 @@ delay(500);*/
   
         }
         	mySerial.print(",");
-		mySerial.print(printposition, BIN);
-         mySerial.print(",");
-		mySerial.println(printrateofchange,BIN);
-      // Gyro();
+	    	mySerial.print(printposition, BIN);
+            mySerial.print(",");
+		    mySerial.println(printrateofchange,BIN);
+     
 	}		
-	
-	for(int other_timer=0; other_timer < 120; other_timer++)//2min gps/temp reading
-	{
-		//insert print time function
-             time=millis();
-		mySerial.print(time, DEC);
-		int loopnum;
-		Gyro();
-		temprature();
-		GPS();
-		delay(1000);
-	}
 	
 }
 
@@ -191,6 +207,7 @@ void temprature()//Read temp. data.
 		val = ((msb) << 4);  // MSB
 		val |= (lsb >> 4);   // LSB
 	//	Serial.print(val*0.0625);/* convert to Deg C(>0!)*/
+	 mySerial.print(",");
 		mySerial.println(val*0.0625, BIN);
                 //delay(1000); 
 	}
