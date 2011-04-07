@@ -79,6 +79,7 @@ unsigned long lasttook = 0; //last sample time
  int conta=0;
  int indices[13];
 // NewSoftSerial gpsSerial(GrxPin, GtxPin);
+SoftwareSerial gpsSerial =  SoftwareSerial(GrxPin, GtxPin);
 //gps
 
 //pid
@@ -105,7 +106,7 @@ void setup()
 	//pinMode(ledPin, OUTPUT);       // Initialize LED pin
 	pinMode(GrxPin, INPUT);
 	pinMode(GtxPin, OUTPUT);
-	Serial.begin(4800);
+	gpsSerial.begin(4800);
 	for (int i=0;i<300;i++)
 	{       // Initialize a buffer for received data
 		linea[i]=' ';
