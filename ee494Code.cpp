@@ -301,16 +301,23 @@ int PIDCONTROL(int loopnum)//PID control
 	Serial.print("  ");
     Serial.print(Output);
   
-	if(Input>=Setpoint)
-	{
-		Serial.print("more then");
-		angle = 60 - Output;
-	}
-	if(Input < Setpoint)
-	{
-	Serial.print("less then");
+	 if(Input <= Setpoint - 2 || Input >= Setpoint + 2) //dead zone
+ {
+	 Serial.print("Dead zone");
+	// angle = 60
+ } 
+ if(Input > Setpoint + 2) 
+ {
+	Serial.print("more then");
+    angle = 60 - Output;
+   
+ }
+ if(Input < Setpoint - 2)
+ {
+   Serial.print("less then");
     angle = Output + 60 ;
-	}
+
+ }
     
     myservo1.write(angle);
 	myservo2.write(angle);
