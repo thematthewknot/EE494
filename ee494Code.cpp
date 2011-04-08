@@ -96,7 +96,7 @@ void setup()
 	//  angle = 60;
 	//initialize the variables we're linked to
 	Input = analogRead(0);
-	Setpoint = 240;
+	Setpoint = 241;
 	Serial.begin(9600);
 	//turn the PID on
 	myPID.SetMode(AUTO);
@@ -303,7 +303,7 @@ int PIDCONTROL(int loopnum)//PID control
 	Serial.print("  ");
     Serial.print(Output);
   
-	 if(Input <= Setpoint - 2 || Input >= Setpoint + 2) //dead zone
+ if(Input <= Setpoint + 2 && Input >= Setpoint - 2) //dead zone
  {
 	 Serial.print("Dead zone");
 	// angle = 60
