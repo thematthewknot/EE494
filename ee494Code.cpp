@@ -118,35 +118,6 @@ void setup()
 void loop()
 {
 
-
-	for(int gyro_timer=0; gyro_timer < 3000; gyro_timer++)//5min gyro contorl
-	{  
-		mySerial.print("1");//signify spin control active
-		         mySerial.print(",");
-
-		int loopnum=0;
-		time=millis();
-		mySerial.print(time, DEC );
-		//insert print time function
-	    Gyro();
-		for(int pidloop=0; pidloop<10;pidloop++)
-        { 
-           if(pidloop==9)
-            {
-            loopnum = 1;
-			}
-
-			PIDCONTROL(loopnum);
-			delay(100);
-  
-        }
-        	mySerial.print(",");
-	    	mySerial.print(printposition, BIN);
-            mySerial.print(",");
-		    mySerial.print(printrateofchange,BIN);
-     mySerial.print(",");
-     mySerial.println("0");
-	}	
 	for(int other_timer=0; other_timer < 120; other_timer++)//2min gps/temp reading
 	{   
 		mySerial.print("0");//signify spin control not active
@@ -174,6 +145,36 @@ void loop()
 		delay(1000);
 	}
 
+
+	for(int gyro_timer=0; gyro_timer < 300; gyro_timer++)//5min gyro contorl
+	{  
+		mySerial.print("1");//signify spin control active
+		         mySerial.print(",");
+
+		int loopnum=0;
+		time=millis();
+		mySerial.print(time, DEC );
+		//insert print time function
+	    Gyro();
+		for(int pidloop=0; pidloop<10;pidloop++)
+        { 
+           if(pidloop==9)
+            {
+            loopnum = 1;
+			}
+
+			PIDCONTROL(loopnum);
+			delay(100);
+  
+        }
+        	mySerial.print(",");
+	    	mySerial.print(printposition, BIN);
+            mySerial.print(",");
+		    mySerial.print(printrateofchange,BIN);
+			mySerial.print(",");
+			mySerial.println("0");
+	}	
+	
 
 }
 
@@ -294,6 +295,7 @@ void Gyro()//Read Gyro data
 
 int PIDCONTROL(int loopnum)//PID control
 {
+	
 	Input = analogRead(0);
 	myPID.Compute();
 	//analogWrite(3,Output);
